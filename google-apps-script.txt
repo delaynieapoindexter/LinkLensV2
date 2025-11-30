@@ -1,0 +1,31 @@
+/**
+ * Google Apps Script to accept POST JSON with { name, email }
+ * and append to the sheet named 'Responses'.
+ */
+function doPost(e) {
+  try {
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName('Responses');
+    if (!sheet) {
+      sheet = ss.insertSheet('Responses');
+      sheet.appendRow(['Timestamp','Name','Email']);
+    }
+    var contentType = e.postData.type;
+    var data;
+    if (contentType === 'application/json' || contentType === 'text/plain') {
+      data = JSON.parse(e.postData.contents);
+    } else {
+      data = e.parameter;
+    }
+    var name = data.name || '';
+    var email = data.email || '';
+    sheet.appendRow([new Date(), name, email]);
+    return ContentService
+      .createTextOutput(JSON.stringify({ result: 'success' }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService
+      .createTextOutput(JSON.stringify({ result: 'error', error: err.message }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
